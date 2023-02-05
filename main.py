@@ -265,16 +265,6 @@ def clean_file(filename):
     save_to_file(filename, patch_free)
 
 
-def alter_patch(filename: str):
-    code = get_code(filename)
-    from pycparser import c_parser, c_ast, c_generator
-    parser = c_parser.CParser()
-    comment_free = remove_comments(code)
-    print(comment_free)
-    ast = parser.parse(comment_free)
-    ast.show(offset=2)
-
-
 # def dfs_on_node(node: tree_sitter.Node):
 #   print(node.type)
 #   for child in node.children:
