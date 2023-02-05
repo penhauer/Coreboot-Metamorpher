@@ -5,7 +5,7 @@ import re
 import typing
 import random
 import string
-import subprocess
+import scope_finder
 
 
 def check_existence(filename: str):
@@ -33,48 +33,6 @@ def get_code(filename: str):
     content = ''.join(lines)
     f.close()
     return content
-
-
-def find_function_scope(code: str, start_ind: int) -> typing.Tuple[int, int]:
-    ind = start_ind
-    st = []
-    while True:
-        if code[ind] == '{':
-            st.append('{')
-        elif code[ind] == '}':
-            st.pop()
-            if len(st) == 0:
-                break
-        ind += 1
-
-    return start_ind, ind + 1
-
-
-FUNCTION_IDENTIFIER_KEY = 'function_identifier'
-IDENTIFIER_REGEX = r'[a-zA-Z_][a-zA-Z0-9_]+'
-RET_TYPE_REGEX = rf'(?:{IDENTIFIER_REGEX}|{IDENTIFIER_REGEX}\s*\*)'
-FUNCTION_REGEX = fr'({RET_TYPE_REGEX})\s*(?P<{FUNCTION_IDENTIFIER_KEY}>{IDENTIFIER_REGEX})\([^()]*\)\s*{{'
-
-
-def find_functions_scopes_by_regex(code: str) -> typing.List[typing.Tuple[int, int]]:
-    matches = re.finditer(FUNCTION_REGEX, code)
-    return list(map(lambda match: find_function_scope(code, match.start()), matches))
-
-
-from tree_sitter import Node, Language, Parser
-C_LANG = Language('./c.so', 'c')
-parser = Parser()
-parser.set_language(C_LANG)
-
-def find_functions_scopes_by_parser(code: str) -> typing.List[typing.Tuple[int, int]]:
-    tree = parser.parse(code.encode("ascii"))
-    root = tree.root_node
-    # map((node.start_point, node.end_point), filter(lambda node: node.type == 'function_definition', root.children))
-    scopes = []
-    for child in root.children:
-      if child.type == 'function_definition':
-        scopes.append((child.start_byte, child.end_byte))
-    return scopes
 
 
 def get_random_string(length):
@@ -112,7 +70,7 @@ NOP_SLIDE = """
 
 
 def add_junk(func_code: str):
-    m = re.match(FUNCTION_REGEX, func_code)
+    m = re.match(scope_finder.RegexFunctionFinder.FUNCTION_REGEX, func_code)
     assert m is not None
     return_type = m.group(1)
     int_var = get_random_string(4)
@@ -156,6 +114,12 @@ def add_nop_slides(func_code: str):
 PATCH_FUNCTION = add_nop_slides
 
 
+def convert_scopes_to_scopes(scopes: typing.List[scope_finder.Scope]) -> typing.List[typing.Tuple[int, int]]:
+    f: typing.Callable[[scope_finder.Scope], typing.Tuple[int, int]]
+    f = lambda x: (x.begin, x.end)
+    return list(map(f, scopes))
+
+
 def patch_functions(code: str, scopes: typing.List[typing.Tuple[int, int]]):
     patched_code = ""
     ind = 0
@@ -179,7 +143,9 @@ def wipe_existing_patches(code):
     p = rf"\n\s*{SIGN_HEADER_PATTERN}{ANYTHING_WITH_NO_COMMENT}{SIGN_FOOTER_PATTERN}\n"
     return re.sub(p, "", code, flags=re.MULTILINE + re.DOTALL)
 
-SCOPE_FINDER_FUNC = find_functions_scopes_by_parser
+# scope_finder_class = parser.TreeSitterParserFunctionFinder
+scope_finder_class = scope_finder.RegexFunctionFinder
+
 
 def sub(code, p):
     print(code[p[0]:p[1]])
@@ -198,13 +164,17 @@ def check_for_diff(s1, s2, code):
 
 def patch_code(code: str):
     cleaned = wipe_existing_patches(code)
-    scopes = SCOPE_FINDER_FUNC(cleaned)
+    scopes = scope_finder_class(cleaned).get_function_scopes()
+    scopes = convert_scopes_to_scopes(scopes)
 
     try:
-        s2 = find_functions_scopes_by_regex(cleaned)
+        s2 = scope_finder.RegexFunctionFinder(cleaned).get_function_scopes()
+        s2 = convert_scopes_to_scopes(s2)
         check_for_diff(s2, scopes, cleaned)
     except Exception as e:
-        print(e)
+        import traceback
+        traceback.print_exception(e)
+
 
     patched = patch_functions(cleaned, scopes)
     return patched
@@ -239,10 +209,8 @@ def run():
         # patch_by_removing_comments_first(args.filename)
         # alter_patch(args.filename)
     elif args.operation == 'clean':
+        print("cleaning ", args.filename)
         clean_file(args.filename)
-    elif args.operation == 'parse':
-        # parse_file(args.filename)
-        pass
     else:
         raise Exception("Bad state")
 
