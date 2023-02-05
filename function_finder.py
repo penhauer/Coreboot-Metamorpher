@@ -13,7 +13,7 @@ class Scope:
 class FunctionFinder(ABC):
 
     @abstractmethod
-    def get_function_scopes(self) -> typing.List[Scope]:
+    def get_function_scopes(self, code: str) -> typing.List[Scope]:
         pass
 
 
@@ -25,16 +25,16 @@ class RegexFunctionFinder(FunctionFinder):
     FUNCTION_REGEX = fr'({RET_TYPE_REGEX})\s*(?P<{FUNCTION_IDENTIFIER_KEY}>{IDENTIFIER_REGEX})\([^()]*\)\s*{{'
 
 
-    def __init__(self, code: str) -> None:
-        self.code = code
+    def __init__(self) -> None:
+        pass
 
-    def __find_function_scope_by_start_ind(self, start_ind: int) -> Scope:
+    def __find_function_scope_by_start_ind(self, code: str, start_ind: int) -> Scope:
         ind = start_ind
         st = []
         while True:
-            if self.code[ind] == '{':
+            if code[ind] == '{':
                 st.append('{')
-            elif self.code[ind] == '}':
+            elif code[ind] == '}':
                 st.pop()
                 if len(st) == 0:
                     break
@@ -44,23 +44,22 @@ class RegexFunctionFinder(FunctionFinder):
 
 
     @override
-    def get_function_scopes(self) -> typing.List[Scope]:
-        matches = re.finditer(RegexFunctionFinder.FUNCTION_REGEX, self.code)
-        return list(map(lambda match: self.__find_function_scope_by_start_ind( match.start()), matches))
+    def get_function_scopes(self, code: str) -> typing.List[Scope]:
+        matches = re.finditer(RegexFunctionFinder.FUNCTION_REGEX, code)
+        return list(map(lambda match: self.__find_function_scope_by_start_ind(code, match.start()), matches))
 
 
 class TreeSitterParserFunctionFinder(FunctionFinder):
     C_LANG = tree_sitter.Language('./c.so', 'c')
 
-    def __init__(self, code: str) -> None:
-        self.code = code
+    def __init__(self) -> None:
         self.parser = tree_sitter.Parser()
         self.parser.set_language(TreeSitterParserFunctionFinder.C_LANG)
-        self.tree = self.parser.parse(self.code.encode("ascii"))
 
     @override 
-    def get_function_scopes(self) -> typing.List[Scope]:
-        root = self.tree.root_node
+    def get_function_scopes(self, code: str) -> typing.List[Scope]:
+        tree = self.parser.parse(code.encode("ascii"))
+        root = tree.root_node
         scopes = []
         for child in root.children:
             if child.type == 'function_definition':

@@ -1,10 +1,10 @@
 import sys
 import argparse
 import os
-import re
-import typing
-import scope_finder
-import patcher as patcher
+import function_finder
+import patcher
+import patch_cleaner
+
 
 
 def check_existence(filename: str):
@@ -34,57 +34,6 @@ def get_code(filename: str):
     return content
 
 
-def convert_scopes_to_scopes(scopes: typing.List[scope_finder.Scope]) -> typing.List[typing.Tuple[int, int]]:
-    f: typing.Callable[[scope_finder.Scope], typing.Tuple[int, int]]
-    f = lambda x: (x.begin, x.end)
-    return list(map(f, scopes))
-
-
-SIGN_HEADER_PATTERN = r"\/\* METAMORPHED SECTION START \*\/"
-SIGN_FOOTER_PATTERN = r"\/\* METAMORPHED SECTION END \*\/"
-ANYTHING_WITH_NO_COMMENT = r"(?:[^\/]|\/[^*])*"
-
-
-def wipe_existing_patches(code):
-    p = rf"\n\s*{SIGN_HEADER_PATTERN}{ANYTHING_WITH_NO_COMMENT}{SIGN_FOOTER_PATTERN}\n"
-    return re.sub(p, "", code, flags=re.MULTILINE + re.DOTALL)
-
-# scope_finder_class = parser.TreeSitterParserFunctionFinder
-scope_finder_class = scope_finder.RegexFunctionFinder
-
-
-def sub(code, p):
-    print(code[p[0]:p[1]])
-
-def check_for_diff(s1, s2, code):
-    get_end = lambda x: x[1]
-    ends_s1 = list(map(get_end, s1))
-    ends_s2 = list(map(get_end, s2))
-
-    for e2 in ends_s2:
-        if e2 not in ends_s1:
-            print("oh" * 10)
-            pass
-            # breakpoint()
-
-
-def patch_code(code: str):
-    cleaned = wipe_existing_patches(code)
-    scopes = scope_finder_class(cleaned).get_function_scopes()
-
-    try:
-        s2 = scope_finder.RegexFunctionFinder(cleaned).get_function_scopes()
-        s2 = convert_scopes_to_scopes(s2)
-        check_for_diff(s2, convert_scopes_to_scopes(scopes), cleaned)
-    except Exception as e:
-        import traceback
-        traceback.print_exception(e)
-
-
-    patched = patcher.CodePatcher(patcher.NopSlideAdderFunctionPatcher()).patch_functions(code, scopes)
-    return patched
-
-
 def save_to_file(filename, text):
     f = open(file=filename, mode="w")
     f.write(text)
@@ -93,15 +42,19 @@ def save_to_file(filename, text):
 
 def patch_file(filename):
     code = get_code(filename)
-    patched = patch_code(code)
+    p = patcher.CodePatcher(
+            function_finder.RegexFunctionFinder(),
+            patch_cleaner.PatchCleaner(),
+            patcher.NopSlideAdderFunctionPatcher()
+            )
+    patched = p.patch_code(code)
     save_to_file(filename, patched)
 
 
 def clean_file(filename):
     code = get_code(filename)
-    patch_free = wipe_existing_patches(code)
+    patch_free = patch_cleaner.PatchCleaner().wipe_existing_patches(code)
     save_to_file(filename, patch_free)
-
 
 
 def run():
@@ -111,8 +64,6 @@ def run():
     if args.operation == 'patch':
         print("patching ", args.filename)
         patch_file(args.filename)
-        # patch_by_removing_comments_first(args.filename)
-        # alter_patch(args.filename)
     elif args.operation == 'clean':
         print("cleaning ", args.filename)
         clean_file(args.filename)

@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 import random
 from typing_extensions import override
-import scope_finder
+import function_finder
 import typing
 import re
 import string
+from patch_cleaner import PatchCleaner
 
 
 class FunctionPatcher(ABC):
@@ -16,6 +17,8 @@ class FunctionPatcher(ABC):
 
 SIGN_HEADER = "/* METAMORPHED SECTION START */"
 SIGN_FOOTER = "/* METAMORPHED SECTION END */"
+SIGN_HEADER_PATTERN = r"\/\* METAMORPHED SECTION START \*\/"
+SIGN_FOOTER_PATTERN = r"\/\* METAMORPHED SECTION END \*\/"
 
 class NopSlideAdderFunctionPatcher(FunctionPatcher):
 
@@ -79,7 +82,7 @@ class JunkReturnAdderFunctionPatcher(FunctionPatcher):
 
     @override
     def patch_function(self, func_code: str) -> str:
-        m = re.match(scope_finder.RegexFunctionFinder.FUNCTION_REGEX, func_code)
+        m = re.match(function_finder.RegexFunctionFinder.FUNCTION_REGEX, func_code)
         assert m is not None
         return_type = m.group(1)
         int_var = self.get_random_string(4)
@@ -104,11 +107,11 @@ class JunkReturnAdderFunctionPatcher(FunctionPatcher):
         return morphed_code
 
 
-class CodePatcher:
+class ScopePatcher:
     def __init__(self, function_patcher: FunctionPatcher) -> None:
         self.function_patcher = function_patcher
 
-    def patch_functions(self, code: str, scopes: typing.List[scope_finder.Scope]):
+    def patch_functions(self, code: str, scopes: typing.List[function_finder.Scope]) -> str:
         patched_code = ""
         ind = 0
         for scope in scopes:
@@ -121,3 +124,40 @@ class CodePatcher:
         patched_code += code[ind:]
         return patched_code
 
+def check_for_diff(s1, s2, code):
+    get_end = lambda x: x.end
+    ends_s1 = list(map(get_end, s1))
+    ends_s2 = list(map(get_end, s2))
+
+    for e2 in ends_s2:
+        if e2 not in ends_s1:
+            print("oh" * 10)
+            pass
+            # breakpoint()
+
+class CodePatcher:
+
+    def __init__(self, 
+                 function_finder: function_finder.FunctionFinder,
+                 patch_cleaner: PatchCleaner, 
+                 patcher: FunctionPatcher) -> None:
+
+        self.function_finder = function_finder
+        self.patch_cleaner = patch_cleaner
+        self.patcher = patcher
+
+    def patch_code(self, code: str):
+        patch_free = self.patch_cleaner.wipe_existing_patches(code)
+        scopes = self.function_finder.get_function_scopes(patch_free)
+
+        try:
+            s2 = function_finder.RegexFunctionFinder().get_function_scopes(patch_free)
+            check_for_diff(s2, scopes, patch_free)
+        except Exception as e:
+            import traceback
+            traceback.print_exception(e)
+
+
+        scope_patcher = ScopePatcher(self.patcher)
+        patched = scope_patcher.patch_functions(code, scopes)
+        return patched
