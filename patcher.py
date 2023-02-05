@@ -5,7 +5,7 @@ import function_finder
 import typing
 import re
 import string
-from patch_cleaner import PatchCleaner
+
 
 
 class FunctionPatcher(ABC):
@@ -19,6 +19,16 @@ SIGN_HEADER = "/* METAMORPHED SECTION START */"
 SIGN_FOOTER = "/* METAMORPHED SECTION END */"
 SIGN_HEADER_PATTERN = r"\/\* METAMORPHED SECTION START \*\/"
 SIGN_FOOTER_PATTERN = r"\/\* METAMORPHED SECTION END \*\/"
+ANYTHING_WITH_NO_COMMENT = r"(?:[^\/]|\/[^*])*"
+
+class PatchCleaner:
+    def __init__(self) -> None:
+        pass
+
+    def wipe_existing_patches(self, code: str) -> str:
+        p = rf"\n\s*{SIGN_HEADER_PATTERN}{ANYTHING_WITH_NO_COMMENT}{SIGN_FOOTER_PATTERN}\n"
+        return re.sub(p, "", code, flags=re.MULTILINE + re.DOTALL)
+
 
 class NopSlideAdderFunctionPatcher(FunctionPatcher):
 
@@ -159,5 +169,5 @@ class CodePatcher:
 
 
         scope_patcher = ScopePatcher(self.patcher)
-        patched = scope_patcher.patch_functions(code, scopes)
+        patched = scope_patcher.patch_functions(patch_free, scopes)
         return patched
