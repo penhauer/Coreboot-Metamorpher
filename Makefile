@@ -27,11 +27,11 @@ etc_files = src/security/memory/memory.c src/security/memory/memory_clear.c src/
 
 
 
-files = ${arch_files} ${acpi_files} ${commonlib_files} ${console_files} ${cpu_files} ${device_files} ${drivers_files} ${lib_files} ${soutbridge_files} ${etc_files}
+files = ${arch_files} ${acpi_files} ${commonlib_files} ${console_files} ${cpu_files} ${device_files} ${drivers_files} ${lib_files} ${mainboard_files} ${soutbridge_files} ${etc_files}
 
 
-# src/cpu/x86/mp_init.c
-excluded = 
+# src/cpu/x86/mp_init.c src/lib/gcc.c src/lib/lzmadecode.c
+excluded = src/cpu/x86/mp_init.c src/lib/gcc.c src/lib/lzmadecode.c
 
 
 
