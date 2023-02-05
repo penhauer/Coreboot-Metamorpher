@@ -222,43 +222,6 @@ def patch_file(filename):
     save_to_file(filename, patched)
 
 
-def remove_comments_from_file(pathname: str):
-    # removes comments using gcc preprocessor
-    sp = subprocess.run(["gcc", "-fpreprocessed", "-dD", "-E", pathname], capture_output=True, text=True)
-    return sp.stdout
-
-
-def remove_comments(code):
-    pathname = "/tmp/cleaned.c"
-    save_to_file(pathname, code)
-    return remove_comments_from_file(pathname)
-
-
-def find_function_start_by_identifier(func_id, with_comments):
-    print("\n"*20)
-    print(func_id)
-    start_ind = with_comments.find(func_id)
-    assert start_ind != -1
-    return find_function_scope(with_comments, start_ind)
-
-
-def find_function_code_with_comments(comment_free, with_comments):
-    matches = re.finditer(FUNCTION_REGEX, comment_free)
-    for match in matches:
-        func_id = match.groupdict()[FUNCTION_IDENTIFIER_KEY]
-        scope = find_function_start_by_identifier(func_id, with_comments)
-        print(with_comments[scope[0] : scope[1]])
-
-
-
-def patch_by_removing_comments_first(filename: str):
-    code = get_code(filename)
-    patch_free = wipe_existing_patches(code)
-    comment_free = remove_comments(patch_free)
-    find_function_code_with_comments(comment_free, code)
-    
-
-
 def clean_file(filename):
     code = get_code(filename)
     patch_free = wipe_existing_patches(code)
