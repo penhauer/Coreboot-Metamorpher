@@ -265,29 +265,6 @@ def clean_file(filename):
     save_to_file(filename, patch_free)
 
 
-# def dfs_on_node(node: tree_sitter.Node):
-#   print(node.type)
-#   for child in node.children:
-#     if child.type == 'function_definition':
-#       x = child.text.decode("ascii")
-#       print(child.start_point, child.end_point)
-# 
-# 
-# def parse_file(filename: str) -> None:
-#     code = get_code(filename)
-#     scopes = find_functions_scopes_by_regex(code)
-#     for scope in scopes:
-#       begin = scope[0]
-#       end = scope[1]
-#       print(code[begin:end])
-#     return
-#     C_LANG = tree_sitter.Language('./c.so', 'c')
-#     parser = tree_sitter.Parser()
-#     parser.set_language(C_LANG)
-#     tree = parser.parse(code.encode("ascii"))
-#     root = tree.root_node
-#     dfs_on_node(root)
-
 
 def run():
     args = parse_args()
