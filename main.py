@@ -44,7 +44,7 @@ def save_to_file(filename, text):
 def patch_file(filename):
     code = get_code(filename)
     p = patcher.CodePatcher(
-            function_finder.RegexFunctionFinder(),
+            function_finder.TreeSitterParserFunctionFinder(),
             patcher.PatchCleaner(),
             patcher.NopSlideAdderFunctionPatcher()
             )
@@ -74,11 +74,11 @@ def run():
         if args.filename:
             print("provider either a file or a sourcefile")
             exit(1)
+    else:
         files = [args.filename]
 
     if args.source_file: 
         files = read_files(args.source_file)
-        print(files)
         
     if args.operation == 'patch':
         for file in files:
