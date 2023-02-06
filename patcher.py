@@ -123,20 +123,27 @@ class CodePatcher:
     def __init__(self, 
                  function_finder: function_finder.FunctionFinder,
                  patch_cleaner: PatchCleaner, 
-                 patcher: FunctionPatcher) -> None:
+                 patcher: FunctionPatcher,
+                 function_choose_p: float) -> None:
 
         self.function_finder = function_finder
         self.patch_cleaner = patch_cleaner
         self.patcher = patcher
+        self.choose_prob = function_choose_p
 
     def patch_functions(self, code: str, scopes: typing.List[function_finder.Scope]) -> str:
         patched_code = ""
         ind = 0
+
         for scope in scopes:
             s, e = scope.begin, scope.end
-            if ind <= s:
-                patched_code += code[ind:s]
-                patched_code += self.patcher.patch_function(code[s:e])
+            if random.random() < self.choose_prob:
+                if ind <= s:
+                    patched_code += code[ind:s]
+                    patched_code += self.patcher.patch_function(code[s:e])
+                    ind = e
+            else:
+                patched_code += code[ind:e]
                 ind = e
 
         patched_code += code[ind:]

@@ -3,6 +3,7 @@ import argparse
 import os
 import function_finder
 import patcher
+from config_reader import get_config, FUNCTION_CHOOSE_P_KEY
 
 
 
@@ -55,7 +56,8 @@ def patch_file(filename):
     p = patcher.CodePatcher(
             function_finder.TreeSitterParserFunctionFinder(),
             patch_cleaner,
-            patcher.NopSlideAdderFunctionPatcher()
+            patcher.NopSlideAdderFunctionPatcher(),
+            float(get_config(FUNCTION_CHOOSE_P_KEY))
             )
 
     patched = p.patch_code(patch_free)
