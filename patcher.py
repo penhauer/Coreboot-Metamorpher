@@ -118,24 +118,6 @@ class JunkReturnAdderFunctionPatcher(FunctionPatcher):
         return morphed_code
 
 
-class ScopePatcher:
-    def __init__(self, function_patcher: FunctionPatcher) -> None:
-        self.function_patcher = function_patcher
-
-    def patch_functions(self, code: str, scopes: typing.List[function_finder.Scope]) -> str:
-        patched_code = ""
-        ind = 0
-        for scope in scopes:
-            s, e = scope.begin, scope.end
-            if ind <= s:
-                patched_code += code[ind:s]
-                patched_code += self.function_patcher.patch_function(code[s:e])
-                ind = e
-
-        patched_code += code[ind:]
-        return patched_code
-
-
 class CodePatcher:
 
     def __init__(self, 
@@ -147,10 +129,22 @@ class CodePatcher:
         self.patch_cleaner = patch_cleaner
         self.patcher = patcher
 
+    def patch_functions(self, code: str, scopes: typing.List[function_finder.Scope]) -> str:
+        patched_code = ""
+        ind = 0
+        for scope in scopes:
+            s, e = scope.begin, scope.end
+            if ind <= s:
+                patched_code += code[ind:s]
+                patched_code += self.patcher.patch_function(code[s:e])
+                ind = e
+
+        patched_code += code[ind:]
+        return patched_code
+
     def patch_code(self, code: str):
         scopes = self.function_finder.get_function_scopes(code)
-        scope_patcher = ScopePatcher(self.patcher)
-        patched = scope_patcher.patch_functions(code, scopes)
+        patched = self.patch_functions(code, scopes)
         return patched
 
 
