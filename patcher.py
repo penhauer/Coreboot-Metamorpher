@@ -5,6 +5,7 @@ import function_finder
 import typing
 import re
 import string
+import traceback
 
 
 
@@ -134,16 +135,6 @@ class ScopePatcher:
         patched_code += code[ind:]
         return patched_code
 
-def check_for_diff(s1, s2, code):
-    get_end = lambda x: x.end
-    ends_s1 = list(map(get_end, s1))
-    ends_s2 = list(map(get_end, s2))
-
-    for e2 in ends_s2:
-        if e2 not in ends_s1:
-            print("oh" * 10)
-            pass
-            # breakpoint()
 
 class CodePatcher:
 
@@ -157,17 +148,53 @@ class CodePatcher:
         self.patcher = patcher
 
     def patch_code(self, code: str):
-        patch_free = self.patch_cleaner.wipe_existing_patches(code)
-        scopes = self.function_finder.get_function_scopes(patch_free)
+        scopes = self.function_finder.get_function_scopes(code)
+        scope_patcher = ScopePatcher(self.patcher)
+        patched = scope_patcher.patch_functions(code, scopes)
+        return patched
 
+
+"""
+compares two fucntion finders in terms of functions found on some code
+"""
+class FunctionFinderComparer:
+    def __init__(self, a: function_finder.FunctionFinder, b: function_finder.FunctionFinder) -> None:
+        self.a = a
+        self.b = b
+
+    """ 
+    only looks for differences in scopes's ends (and excludes beginnings) because two different 
+    function scope finders usually find the end of functions equally and beginnings might differ.
+    """
+    def compare(self, code: str) -> None:
         try:
-            s2 = function_finder.RegexFunctionFinder().get_function_scopes(patch_free)
-            check_for_diff(s2, scopes, patch_free)
+            scopes1 = self.a.get_function_scopes(code)
+            scopes2 = self.b.get_function_scopes(code)
+
+            get_end = lambda x: x.end
+            ends_s1 = set(map(get_end, scopes1))
+            ends_s2 = set(map(get_end, scopes2))
+
+            def get_scope_by_end(scopes: typing.List[function_finder.Scope], end: int):
+                for scope in scopes:
+                    if scope.end == end:
+                        return scope
+                return None
+
+            da = ends_s1 - ends_s2
+            db = ends_s2 - ends_s1
+
+
+            if len(da) >= 1:
+                la = map(lambda x: get_scope_by_end(scopes1, x), da)
+                print(f"warning, found functions {la} in {self.a} not in {self.b}")
+
+            if len(db) >= 1:
+                lb = map(lambda x: get_scope_by_end(scopes2, x), db)
+                print(f"warning, found functions {lb} in {self.b} not in {self.a}")
+
         except Exception as e:
-            import traceback
+            print("error while finding function scopes")
             traceback.print_exception(e)
 
 
-        scope_patcher = ScopePatcher(self.patcher)
-        patched = scope_patcher.patch_functions(patch_free, scopes)
-        return patched

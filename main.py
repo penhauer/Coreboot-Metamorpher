@@ -42,12 +42,23 @@ def save_to_file(filename, text):
 
 def patch_file(filename):
     code = get_code(filename)
+
+    patch_cleaner = patcher.PatchCleaner()
+    patch_free = patch_cleaner.wipe_existing_patches(code)
+
+    comparer = patcher.FunctionFinderComparer(
+            function_finder.RegexFunctionFinder(),
+            function_finder.TreeSitterParserFunctionFinder()
+            )
+    comparer.compare(code)
+
     p = patcher.CodePatcher(
             function_finder.TreeSitterParserFunctionFinder(),
-            patcher.PatchCleaner(),
+            patch_cleaner,
             patcher.NopSlideAdderFunctionPatcher()
             )
-    patched = p.patch_code(code)
+
+    patched = p.patch_code(patch_free)
     save_to_file(filename, patched)
 
 
