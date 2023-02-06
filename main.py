@@ -71,7 +71,7 @@ def clean_file(filename):
 def run():
     args = parse_args()
     files = args.filename
-        
+
     for file in files:
         check_existence(file)
         check_format(file)
