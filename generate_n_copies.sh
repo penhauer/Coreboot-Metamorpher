@@ -23,7 +23,7 @@ fi
 COREBOOT_PATH="${COREBOOT_PATH}/"
 
 # files.txt contains the C files to be patched
-source_file=files.txt
+source_file=resources/files.txt
 
 # filter lines starting with '#'
 # files in this variable are relative to coreboot root directory
@@ -35,7 +35,7 @@ absolute_files=$(echo "${relative_files}" | awk "{ print \"${COREBOOT_PATH}\" \$
 for i in $(seq ${copies}); do
   label=$(date +"%Y.%m.%d_%T")
   echo "generating clone #${i} with label ${label}"
-  ./venv/bin/python3 main.py patch -f ${absolute_files}
+  ./venv/bin/python3 ./src/main.py patch -f ${absolute_files}
   cd ${COREBOOT_PATH}
   ./compile.sh
   cd -

@@ -3,6 +3,7 @@ import typing
 import re
 from typing_extensions import override
 import tree_sitter
+from config_reader import PARSER_PATH
 
 class Scope:
     def __init__(self, begin: int, end: int) -> None:
@@ -50,7 +51,7 @@ class RegexFunctionFinder(FunctionFinder):
 
 
 class TreeSitterParserFunctionFinder(FunctionFinder):
-    C_LANG = tree_sitter.Language('./c.so', 'c')
+    C_LANG = tree_sitter.Language(PARSER_PATH, 'c')
 
     def __init__(self) -> None:
         self.parser = tree_sitter.Parser()
