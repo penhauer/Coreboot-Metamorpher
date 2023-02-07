@@ -100,4 +100,4 @@ Coreboot by default, defines the target `filelist` which list according to the M
 
 
 # Compliation and building notes
-As stated, there were link time errors with some files which I did not manage to resolve. You may notice the same errors when building for a different architecture (than the current list of files for`i386`). In such a case, just comment the problematic files and you are good to go.
+As stated, there were link time errors with some files which I did not manage to resolve. You may notice the same errors when building for a different architecture (than the current list of files for `i386`). In such a case, just comment the problematic files and you are good to go.
