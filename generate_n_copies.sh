@@ -36,7 +36,7 @@ for i in $(seq ${copies}); do
   echo "generating clone #${i} with label ${label}"
 
   # apply patches on the list of flies
-  ./venv/bin/python3 ./src/main.py patch -f ${absolute_files}
+  python3 ./src/main.py patch -f ${absolute_files}
 
   # compile the coreboot
   make -C "${COREBOOT_PATH}" all V=1
