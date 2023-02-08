@@ -26,18 +26,21 @@ COREBOOT_PATH="${COREBOOT_PATH}/"
 source_file=resources/files.txt
 
 # filter lines starting with '#'
-# files in this variable are relative to coreboot root directory
+# files in this variable are relative to coreboot's root directory
 relative_files=$(grep --invert-match -E '^#' ${source_file})
 
-#convert paths to paths relative to this script
 absolute_files=$(echo "${relative_files}" | awk "{ print \"${COREBOOT_PATH}\" \$1 }")
 
 for i in $(seq ${copies}); do
   label=$(date +"%Y.%m.%d_%T")
   echo "generating clone #${i} with label ${label}"
+
+  # apply patches on the list of flies
   ./venv/bin/python3 ./src/main.py patch -f ${absolute_files}
-  cd ${COREBOOT_PATH}
-  ./compile.sh
-  cd -
+
+  # compile the coreboot
+  make -C "${COREBOOT_PATH}" all V=1
+
+  # copy the built image to ./clones directory
   cp "${COREBOOT_PATH}/build/coreboot.rom" "./clones/coreboot.rom_${label}"
 done
