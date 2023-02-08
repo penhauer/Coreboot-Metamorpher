@@ -86,7 +86,7 @@ def run():
     elif args.operation == 'clean':
         for file in files:
             print("cleaning ", args.filename)
-            clean_file(args.filename)
+            clean_file(file)
     else:
         raise Exception("Bad state")
 
