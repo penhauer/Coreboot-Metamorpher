@@ -10,8 +10,6 @@ FUNCTION_CHOOSE_P_KEY = 'FUNCTION_CHOOSE_P'
 CONFIG_PATH = os.path.join(RESOURCES_DIR, CONFIG_FILE)
 PARSER_PATH = os.path.join(RESOURCES_DIR, PARSER_FILE)
 
-print(PARSER_PATH)
-
 config = configparser.ConfigParser()
 config.read(CONFIG_PATH)
 
