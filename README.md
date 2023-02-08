@@ -1,7 +1,7 @@
 # Coreboot-Metamorpher
 Produces metamorphic versions of Coreboot by inserting junk instructions into source code
 
-This project aims to produce metamorphic versions of Coreboot image by inserting asm instructions into C sourcecode. <a href="https://github.com/coreboot/coreboot">Coreboot</a> is a opensource firmware which can replace proprietary firmwares like BIOS and UEFI. Metamorphic clones of a program, are verions of it that have the same observable external behaviour but differ in the internal structure. The idea of producing metamorphic clones, is to increase software diversity analogous to diversity in viruses. Thus, if an attacker finds an exploit in one version, the same attack is not replayable on every other version. In other words, we aim to produce BOBE (**B**reak **O**nce **B**reak **E**verywhere) resitance to the different clones of the software.
+This project aims to produce metamorphic versions of Coreboot image by inserting asm instructions into C sourcecode. <a href="https://github.com/coreboot/coreboot">Coreboot</a> is a opensource firmware which can replace proprietary firmwares like BIOS and UEFI. Metamorphic clones of a program, are versions of it that have the same observable external behaviour but differ in the internal structure. The idea of producing metamorphic clones, is to increase software diversity analogous to diversity in viruses. Thus, if an attacker finds an exploit in one version, the same attack is not replayable on every other version. In other words, we aim to produce BOBE (**B**reak **O**nce **B**reak **E**verywhere) resitance to the different clones of the software.
 
 # How it works
 
@@ -70,7 +70,7 @@ This is the equivalent function in assembly found by inspecting the correspondin
 	...
 ```
 
-In pictures above, a block of junk nop instructions plus a redundant consecutive push and pop on %eax register is inserted via `__asm__` assembler instruction. The keyword `voltaile` causes the compiler to not optimize out the nops. More information on extended asm and assembler instructions can be found <a href="https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html">here</a>.
+In pictures above, a block of junk nop instructions plus a redundant consecutive push and pop on `%eax` register is inserted via `__asm__` assembler instruction. The keyword `voltaile` causes the compiler to not optimize out the nops. More information on extended asm and assembler instructions can be found <a href="https://gcc.gnu.org/onlinedocs/gcc/Extended-Asm.html">here</a>.
 
 
 # Usage
