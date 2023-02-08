@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+set -e
+
 if [ $# -lt 1 ]; then
   echo "ERROR: please enter number of clones wanted" >&2
   exit 1
@@ -37,8 +39,6 @@ for i in $(seq ${copies}); do
 
   # apply patches on the list of flies
   /usr/bin/env python3 ./src/main.py patch -f ${absolute_files}
-
-  [[ $? != 0 ]] && exit 1
 
   # compile the coreboot
   make -C "${COREBOOT_PATH}" all V=1
