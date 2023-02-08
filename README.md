@@ -109,7 +109,16 @@ Coreboot by default, defines the target `filelist` which list according to the M
 # Notes
 
 ## Compliation and building notes
-As stated, there were link time errors with some files which I did not manage to resolve. You may notice the same errors when building for a different architecture (than the current list of files for `i386`). In such a case, just comment the problematic files and you are good to go.
+As stated, there were link time errors with some files which I did not manage to resolve. You may notice the same errors when building for a different architecture (than the current list of files for `i386`). In such a case, just comment the problematic files and you are good to go. Also do not forget to remove patches from the commented files since they will be ignored from now on. To do this, you can use either of the following options:
+
+```bash
+# use the provided tool to clean
+$ /usr/bin/env python3 src/main.py clean -f path/to/file/to/clean
+
+# alternatively, use git to remove the patches from the file
+cd ${COREBOOT_PATH}
+git restore /path/to/file/to/clean
+```
 
 ## Configuring patching probability
 Every function found in a file is patched with a probability of p which can be configured by changing the `function_choose_p` key in the `resources/config.ini` file.
