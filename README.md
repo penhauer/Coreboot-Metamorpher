@@ -79,6 +79,13 @@ To execute the project, execute the following command:
 
 
 ```bash
+# first install the requirements
+$ pip3 install -r requirements.txt
+
+# set NUMBER_OF_COPIES_NEEDED
+$ NUMBER_OF_COPIES_NEEDED=1
+
+# generate metamorphic copies
 $ COREBOOT_PATH=/path/to/coreboot/root ./generate_n_copies ${NUMBER_OF_COPIES_NEEDED}
 ```
 Providing the number of copies in the command, the script produces n copies of metamorphed coreboot image under `./clones` directory. Please not that a list of files to be metamorphed is in `files.txt` under `resources` repository. The current `files.txt` is the list of files for building coreboot for the i386 architecture. See the section about `files.txt` for more information regarding this file. Also, a compile.sh
@@ -99,5 +106,10 @@ $ make filelist | grep '.*\.c$'
 Coreboot by default, defines the target `filelist` which list according to the Makefile is the "Files used in build". The command filters the files with a `.c` ending as header files and some other files are also listed.
 
 
-# Compliation and building notes
+# Notes
+
+## Compliation and building notes
 As stated, there were link time errors with some files which I did not manage to resolve. You may notice the same errors when building for a different architecture (than the current list of files for `i386`). In such a case, just comment the problematic files and you are good to go.
+
+## Configuring patching probability
+Every function found in a file is patched with a probability of p which can be configured by changing the `function_choose_p` key in the `resources/config.ini` file.
